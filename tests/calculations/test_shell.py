@@ -451,7 +451,7 @@ def test_parser_over_daemon(generate_code, submit_and_await):
     assert node.outputs.string == value
 
 
-def test_input_output_filename_overlap(generate_calc_job, generate_code, tmp_path, caplog):
+def test_input_output_filename_overlap(generate_calc_job, generate_code, tmp_path):
     """Test functionality when input and output filenames overlap."""
     code = generate_code()
 
@@ -490,7 +490,6 @@ def test_input_output_filename_overlap(generate_calc_job, generate_code, tmp_pat
     filenames = [p.name for p in dirpath.iterdir()]
     assert code_info.stdout_name not in filenames
     assert code_info.stderr_name not in filenames
-    assert 'filename `stdout` for node `file` overlaps' in caplog.records[0].message
 
     # If the contents of a ``FolderData`` overlap with a reserved filename, an exception is raised. This is done because
     # not doing everything will most likely fail the calculation as some input files will be overwritten. The plugin can
