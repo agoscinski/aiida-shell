@@ -5,7 +5,7 @@ import shlex
 import pytest
 from aiida.common.datastructures import CodeInfo
 from aiida.engine import run_get_node
-from aiida.orm import Data, Float, FolderData, Int, List, RemoteData, SinglefileData, Str
+from aiida.orm import Data, Float, FolderData, Int, List, RemoteData, SinglefileData, Str, Log
 from aiida_shell.calculations.shell import ShellJob
 from aiida_shell.data import EntryPointData, PickledData
 
@@ -486,10 +486,21 @@ def test_input_output_filename_overlap(generate_calc_job, generate_code, tmp_pat
             'nodes': {'file': SinglefileData.from_string('content', filename='stdout')},
         },
     )
+
+    process = generate_calc_job(
+        'core.shell',
+        inputs={
+            'code': code,
+            'nodes': {'file': SinglefileData.from_string('content', filename='stdout')},
+        },
+        return_process=True
+    )
     code_info = calc_info.codes_info[0]
     filenames = [p.name for p in dirpath.iterdir()]
     assert code_info.stdout_name not in filenames
     assert code_info.stderr_name not in filenames
+    logs = Log.collection.find(filters={'dbnode_id': process.node.pk})
+    assert 'filename `stdout` for node `file` overlaps' in ''.join([entry.message for entry in logs])
 
     # If the contents of a ``FolderData`` overlap with a reserved filename, an exception is raised. This is done because
     # not doing everything will most likely fail the calculation as some input files will be overwritten. The plugin can
